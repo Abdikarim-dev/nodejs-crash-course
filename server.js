@@ -1,28 +1,61 @@
 const http = require("http");
+const { getUsers, getUserById } = require("./controllers/user");
 
-const PORT = process.env.PORT || 9000;
+const PORT = process.env.PORT || 5000;
 
-const server = http.createServer((request, response) => {
-  //   response.write("Hello, World!");
-  //   response.setHeader("Content-Type", "application/json");
-
-  // You can combine these two by using writeHead
-  //   response.setHeader("Content-Type", "text/html");
-  //   response.statusCode = 404;
-
-  response.writeHead(200, {
-    "Content-Type": "text/html",
-  });
-
-  response.end(
-    `<h1>
-    <strong>message</strong>: "Hello, World", 
-    </h1>
-    <p>
-    <strong>timestamp</strong>: ${new Date().toISOString()}
-    </p>
-    `
-  );
+const server = http.createServer((req, res) => {
+  try {
+    // console.log(`Received request for ${req.url} with method ${req.method}`);
+    if (req.url.startsWith("/api/users")) {
+      if (req.method === "GET" && req.url === "/api/users") {
+        res.setHeader("Content-Type", "application/json");
+        res.write(
+          JSON.stringify({
+            users: getUsers(),
+            message: "Users fetched successfully",
+          })
+        );
+        res.end();
+      } else if (req.method === "GET" && req.url.startsWith("/api/users/")) {
+        const parts = req.url.split("/");
+        const userId = parseInt(parts[3]);
+        if (userId) {
+          const user = getUserById(userId);
+          if (user) {
+            res.setHeader("Content-Type", "application/json");
+            res.write(
+              JSON.stringify({ user, message: "User fetched successfully" })
+            );
+            res.end();
+          } else {
+            res.writeHead(404, {
+              "Content-Type": "text/plain",
+            });
+            res.end("User not found!");
+          }
+        } else {
+          res.writeHead(400, {
+            "Content-Type": "text/plain",
+          });
+          res.end("User ID not provided!");
+        }
+      } else if (req.method === "POST" && req.url == "/api/users") {
+        res.setHeader("Content-Type", "application/json");
+      }
+    } else if (req.method == "api/posts") {
+    } else {
+      res.writeHead(404, {
+        "Content-Type": "text/plain",
+      });
+      res.end("Not Found!");
+    }
+  } catch (error) {
+    console.error("Error occurred:", error);
+    res.writeHead(500, {
+      "Content-Type": "text/plain",
+    });
+    res.end(`Internal Server Error: ${error.message}`);
+  }
 });
 
 server.listen(PORT, () => {
