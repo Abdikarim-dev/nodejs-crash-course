@@ -15,7 +15,13 @@ const server = http.createServer((request, response) => {
   });
 
   response.end(
-    `message: "Hello, World", timestamp: ${new Date().toISOString()}`
+    `<h1>
+    <strong>message</strong>: "Hello, World", 
+    </h1>
+    <p>
+    <strong>timestamp</strong>: ${new Date().toISOString()}
+    </p>
+    `
   );
 });
 
