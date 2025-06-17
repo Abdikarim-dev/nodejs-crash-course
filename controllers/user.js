@@ -32,9 +32,8 @@ module.exports.getUserById = (id) => {
 module.exports.addUser = (user) => {
   if (
     typeof user !== "object" ||
-    !user.id ||
     !user.name ||
-    !user.email ||
+    !user.email || 
     users.some((u) => u.email === user?.email)
   ) {
     throw new Error("Invalid or duplicate user");

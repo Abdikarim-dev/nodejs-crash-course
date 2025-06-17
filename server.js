@@ -1,5 +1,11 @@
 const http = require("http");
-const { getUsers, getUserById } = require("./controllers/user");
+const {
+  getUsers,
+  getUserById,
+  addUser,
+  editUser,
+  deleteUser,
+} = require("./controllers/user");
 
 const PORT = process.env.PORT || 5000;
 
@@ -40,14 +46,92 @@ const server = http.createServer((req, res) => {
           res.end("User ID not provided!");
         }
       } else if (req.method === "POST" && req.url == "/api/users") {
-        res.setHeader("Content-Type", "application/json");
+        let body = "";
+        req.on("data", (chunk) => {
+          body += chunk;
+        });
+
+        req.on("end", () => {
+          try {
+            const user = JSON.parse(body);
+            addUser(user);
+            res.writeHead(201, { "Content-Type": "application/json" });
+            res.end(
+              JSON.stringify({
+                message: "User added successfully!",
+                user,
+              })
+            );
+          } catch (error) {
+            res.writeHead(400, { "Content-Type": "application/json" });
+            res.end(
+              JSON.stringify({
+                error: error.message,
+              })
+            );
+          }
+        });
+      } else if (req.method === "PUT") {
+        const parts = req.url.split("/");
+        const userId = parseInt(parts[3]);
+        if (userId) {
+          try {
+            let body = "";
+            req.on("data", (chunk) => {
+              body += chunk;
+            });
+
+            req.on("end", () => {
+              const user = JSON.parse(body);
+              const edittedUser = editUser(userId, user);
+              res.writeHead(200, { "Content-Type": "application/json" });
+              res.end(
+                JSON.stringify({
+                  message: "User Editted Successfully!",
+                  user: edittedUser,
+                })
+              );
+            });
+          } catch (error) {
+            res.writeHead(400, { "Content-Type": "application/json" });
+            res.end(JSON.stringify({ error: error.message }));
+          }
+        } else {
+          res.writeHead(400, {
+            "Content-Type": "text/plain",
+          });
+          res.end("User ID not provided!");
+        }
+      } else if (req.method === "DELETE") {
+        const userId = parseInt(req.url.split("/")[3], 10);
+
+        if (userId) {
+          try {
+            const deletedUser = deleteUser(userId);
+
+            res.writeHead(200, { "Content-Type": "application/json" });
+            res.end(
+              JSON.stringify({
+                message: "Deleted User Successfully!",
+                user: deletedUser,
+              })
+            );
+          } catch (error) {
+            res.writeHead(400, { "Content-Type": "application/json" });
+            res.end(JSON.stringify({ error: error.message }));
+          }
+        } else {
+          res.writeHead(400, {
+            "Content-Type": "text/plain",
+          });
+          res.end("User ID not provided!");
+        }
       }
-    } else if (req.method == "api/posts") {
     } else {
       res.writeHead(404, {
         "Content-Type": "text/plain",
       });
-      res.end("Not Found!");
+      res.end(`Not Found! URL ${req.method}`);
     }
   } catch (error) {
     console.error("Error occurred:", error);
